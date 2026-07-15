@@ -57,6 +57,7 @@ The server will be available at `http://localhost:8000`.
 | `DJANGO_DEBUG` | Enable debug mode | `True` |
 | `DJANGO_ALLOWED_HOSTS` | Comma-separated allowed hosts | `""` |
 | `DJANGO_CSRF_TRUSTED_ORIGINS` | Comma-separated trusted origins for CSRF (include scheme) | `""` |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated browser origins allowed to call the API (include scheme) | `""` |
 | `DB_NAME` | PostgreSQL database name | `shunyata` |
 | `DB_USER` | PostgreSQL user | `postgres` |
 | `DB_PASSWORD` | PostgreSQL password | `""` |
