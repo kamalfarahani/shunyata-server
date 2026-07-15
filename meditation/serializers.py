@@ -3,7 +3,13 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from meditation.models import MeditationSession
+from meditation.models import MeditationSession, MeditationType
+
+
+class MeditationTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MeditationType
+        fields = ["id", "name"]
 
 
 class CaseInsensitiveTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -28,10 +34,15 @@ class MeditationSessionSerializer(serializers.ModelSerializer):
             "end_time",
             "duration",
             "meditation_type",
+            "meditation_type_name",
             "completed",
             "notes",
         ]
         read_only_fields = ["user"]
+
+    meditation_type_name = serializers.CharField(
+        source="meditation_type.name", read_only=True
+    )
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):

@@ -3,23 +3,12 @@ from meditation.views.auth import (
     UserRegistrationView,
     VerifyEmailView,
 )
-from meditation.views.pages import (
-    index,
-    login_page,
-    register_page,
-    stats_page,
-    timer_page,
-)
-from meditation.views.sessions import MeditationSessionViewSet
+from meditation.views.sessions import MeditationSessionViewSet, MeditationTypeViewSet
 
 __all__ = [
-    "index",
-    "login_page",
-    "register_page",
-    "stats_page",
-    "timer_page",
-    "MeditationSessionViewSet",
     "CaseInsensitiveTokenObtainPairView",
+    "MeditationSessionViewSet",
+    "MeditationTypeViewSet",
     "UserRegistrationView",
     "VerifyEmailView",
 ]

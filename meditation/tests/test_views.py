@@ -2,55 +2,13 @@ from datetime import timedelta
 
 from django.contrib.auth.models import User
 from django.core import mail
-from django.test import TestCase, override_settings
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
-from meditation.models import EmailVerificationToken, MeditationSession
-
-
-@override_settings(
-    STORAGES={
-        "default": {
-            "BACKEND": "django.core.files.storage.FileSystemStorage",
-        },
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    }
-)
-class TemplateViewsTest(TestCase):
-    def test_index_page(self):
-        response = self.client.get(reverse("index"))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "meditation/index.html")
-
-    def test_register_page(self):
-        response = self.client.get(reverse("register_page"))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "meditation/register.html")
-
-    def test_timer_page(self):
-        response = self.client.get(reverse("timer_page"))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "meditation/timer.html")
-
-    def test_stats_page(self):
-        response = self.client.get(reverse("stats_page"))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "meditation/stats.html")
-
-    @override_settings(ALLOWED_REDIRECT_DOMAINS=["example.com", "test.com"])
-    def test_login_page(self):
-        response = self.client.get(reverse("login_page"))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "meditation/login.html")
-        self.assertIn("allowed_redirect_domains", response.context)
-        self.assertEqual(
-            response.context["allowed_redirect_domains"], ["example.com", "test.com"]
-        )
+from meditation.models import EmailVerificationToken, MeditationSession, MeditationType
 
 
 class MeditationSessionViewSetTest(APITestCase):
@@ -62,13 +20,15 @@ class MeditationSessionViewSetTest(APITestCase):
         self.other_user = User.objects.create_user(
             username="otheruser", email="other@example.com", password="testpass123"
         )
+        self.mindfulness = MeditationType.objects.get(name="Mindfulness")
+        self.breathing = MeditationType.objects.get(name="Breathing")
 
         self.start_time = timezone.now()
         self.end_time = self.start_time + timedelta(minutes=20)
         self.duration = self.end_time - self.start_time
 
         self.session_data = {
-            "meditation_type": "mindfulness",
+            "meditation_type": self.mindfulness.pk,
             "start_time": self.start_time.isoformat(),
             "end_time": self.end_time.isoformat(),
             "duration": str(self.duration),
@@ -86,7 +46,7 @@ class MeditationSessionViewSetTest(APITestCase):
 
         MeditationSession.objects.create(
             user=self.user,
-            meditation_type="mindfulness",
+            meditation_type=self.mindfulness,
             start_time=self.start_time,
             end_time=self.end_time,
             duration=self.duration,
@@ -104,7 +64,7 @@ class MeditationSessionViewSetTest(APITestCase):
 
         MeditationSession.objects.create(
             user=self.user,
-            meditation_type="mindfulness",
+            meditation_type=self.mindfulness,
             start_time=self.start_time,
             end_time=self.end_time,
             duration=self.duration,
@@ -113,7 +73,7 @@ class MeditationSessionViewSetTest(APITestCase):
 
         MeditationSession.objects.create(
             user=self.other_user,
-            meditation_type="breathing",
+            meditation_type=self.breathing,
             start_time=self.start_time,
             end_time=self.end_time,
             duration=self.duration,
@@ -125,7 +85,8 @@ class MeditationSessionViewSetTest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["meditation_type"], "mindfulness")
+        self.assertEqual(response.data[0]["meditation_type"], self.mindfulness.pk)
+        self.assertEqual(response.data[0]["meditation_type_name"], "Mindfulness")
 
     def test_create_session_authenticated(self):
         self.client.force_authenticate(user=self.user)
@@ -149,7 +110,7 @@ class MeditationSessionViewSetTest(APITestCase):
 
         session = MeditationSession.objects.create(
             user=self.user,
-            meditation_type="breathing",
+            meditation_type=self.breathing,
             start_time=self.start_time,
             end_time=self.end_time,
             duration=self.duration,
@@ -161,7 +122,8 @@ class MeditationSessionViewSetTest(APITestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["meditation_type"], "breathing")
+        self.assertEqual(response.data["meditation_type"], self.breathing.pk)
+        self.assertEqual(response.data["meditation_type_name"], "Breathing")
         self.assertEqual(response.data["notes"], "Test notes")
 
     def test_update_session(self):
@@ -169,7 +131,7 @@ class MeditationSessionViewSetTest(APITestCase):
 
         session = MeditationSession.objects.create(
             user=self.user,
-            meditation_type="mindfulness",
+            meditation_type=self.mindfulness,
             start_time=self.start_time,
             end_time=self.end_time,
             duration=self.duration,
@@ -192,7 +154,7 @@ class MeditationSessionViewSetTest(APITestCase):
 
         session = MeditationSession.objects.create(
             user=self.user,
-            meditation_type="mindfulness",
+            meditation_type=self.mindfulness,
             start_time=self.start_time,
             end_time=self.end_time,
             duration=self.duration,
@@ -210,7 +172,7 @@ class MeditationSessionViewSetTest(APITestCase):
 
         other_session = MeditationSession.objects.create(
             user=self.other_user,
-            meditation_type="mindfulness",
+            meditation_type=self.mindfulness,
             start_time=self.start_time,
             end_time=self.end_time,
             duration=self.duration,
@@ -221,6 +183,18 @@ class MeditationSessionViewSetTest(APITestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_list_meditation_types(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get(reverse("meditation-type-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            {"Mindfulness", "Breathing"}.issubset(
+                {item["name"] for item in response.data}
+            )
+        )
 
 
 @override_settings(
@@ -400,4 +374,3 @@ class VerifyEmailViewTest(APITestCase):
         self.assertFalse(
             EmailVerificationToken.objects.filter(token=token_value).exists()
         )
-

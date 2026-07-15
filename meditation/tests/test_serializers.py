@@ -4,9 +4,10 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.utils import timezone
 
-from meditation.models import MeditationSession
+from meditation.models import MeditationSession, MeditationType
 from meditation.serializers import (
     MeditationSessionSerializer,
+    MeditationTypeSerializer,
     UserRegistrationSerializer,
 )
 
@@ -18,13 +19,15 @@ class MeditationSessionSerializerTest(TestCase):
             email="test@example.com",
             password="testpass123"
         )
+        self.mindfulness = MeditationType.objects.get(name="Mindfulness")
+        self.breathing = MeditationType.objects.get(name="Breathing")
 
         self.start_time = timezone.now()
         self.end_time = self.start_time + timedelta(minutes=20)
         self.duration = self.end_time - self.start_time
 
         self.session_data = {
-            "meditation_type": "mindfulness",
+            "meditation_type": self.mindfulness.pk,
             "start_time": self.start_time.isoformat(),
             "end_time": self.end_time.isoformat(),
             "duration": str(self.duration),
@@ -43,7 +46,7 @@ class MeditationSessionSerializerTest(TestCase):
         session = serializer.save(user=self.user)
 
         self.assertEqual(session.user, self.user)
-        self.assertEqual(session.meditation_type, "mindfulness")
+        self.assertEqual(session.meditation_type, self.mindfulness)
         self.assertTrue(session.completed)
         self.assertEqual(session.notes, "Great session")
 
@@ -62,6 +65,7 @@ class MeditationSessionSerializerTest(TestCase):
             "end_time",
             "duration",
             "meditation_type",
+            "meditation_type_name",
             "completed",
             "notes"
         ]
@@ -71,7 +75,7 @@ class MeditationSessionSerializerTest(TestCase):
     def test_serializer_with_existing_session(self):
         session = MeditationSession.objects.create(
             user=self.user,
-            meditation_type="breathing",
+            meditation_type=self.breathing,
             start_time=self.start_time,
             end_time=self.end_time,
             duration=self.duration,
@@ -81,7 +85,8 @@ class MeditationSessionSerializerTest(TestCase):
 
         serializer = MeditationSessionSerializer(session)
 
-        self.assertEqual(serializer.data["meditation_type"], "breathing")
+        self.assertEqual(serializer.data["meditation_type"], self.breathing.pk)
+        self.assertEqual(serializer.data["meditation_type_name"], "Breathing")
         self.assertEqual(serializer.data["notes"], "Test notes")
         self.assertTrue(serializer.data["completed"])
 
@@ -94,6 +99,11 @@ class MeditationSessionSerializerTest(TestCase):
 
         session = serializer.save(user=self.user)
         self.assertEqual(session.notes, "")
+
+    def test_meditation_type_serializer(self):
+        serializer = MeditationTypeSerializer(self.mindfulness)
+
+        self.assertEqual(serializer.data, {"id": self.mindfulness.pk, "name": "Mindfulness"})
 
 
 class UserRegistrationSerializerTest(TestCase):

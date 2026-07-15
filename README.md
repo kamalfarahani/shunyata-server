@@ -1,6 +1,6 @@
 # Shunyata Backend
 
-Backend server for the Shunyata meditation tracking app. Built with Django and Django REST Framework, it provides a REST API for logging and managing meditation sessions, along with a server-rendered web interface.
+Backend server for the Shunyata meditation tracking app. Built with Django and Django REST Framework, it provides a REST API for logging and managing meditation sessions, plus the Django admin for data management.
 
 ## Tech Stack
 
@@ -56,6 +56,7 @@ The server will be available at `http://localhost:8000`.
 | `DJANGO_SECRET_KEY` | Django secret key | insecure dev key |
 | `DJANGO_DEBUG` | Enable debug mode | `True` |
 | `DJANGO_ALLOWED_HOSTS` | Comma-separated allowed hosts | `""` |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | Comma-separated trusted origins for CSRF (include scheme) | `""` |
 | `DB_NAME` | PostgreSQL database name | `shunyata` |
 | `DB_USER` | PostgreSQL user | `postgres` |
 | `DB_PASSWORD` | PostgreSQL password | `""` |
@@ -70,7 +71,6 @@ The server will be available at `http://localhost:8000`.
 | `DEFAULT_FROM_EMAIL` | Sender address | `EMAIL_HOST_USER` |
 | `VERIFICATION_EMAIL_EXPIRY_HOURS` | Email token TTL in hours | `24` |
 | `FRONTEND_URL` | Base URL for verification links | `http://localhost:3000` |
-| `ALLOWED_REDIRECT_DOMAINS` | Comma-separated domains for post-login redirects | `""` |
 
 > For development, set `EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend` to print emails to the terminal instead of sending them.
 
@@ -103,12 +103,14 @@ All endpoints require authentication.
 | `PUT` | `/api/meditations/sessions/<id>/` | Update a session |
 | `PATCH` | `/api/meditations/sessions/<id>/` | Partially update a session |
 | `DELETE` | `/api/meditations/sessions/<id>/` | Delete a session |
+| `GET` | `/api/meditations/types/` | List available meditation types |
 
 **Session fields:**
 
 | Field | Type | Description |
 |---|---|---|
-| `meditation_type` | string | One of: `mindfulness`, `breathing`, `body_scan`, `loving_kindness`, `walking`, `other` |
+| `meditation_type` | integer | ID of a meditation type from `/api/meditations/types/` |
+| `meditation_type_name` | string | Read-only meditation type name |
 | `start_time` | datetime | Session start (ISO 8601) |
 | `end_time` | datetime | Session end (ISO 8601) |
 | `duration` | duration | Length of the session |

@@ -2,16 +2,22 @@ from django.conf import settings
 from django.db import models
 
 
+class MeditationType(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self) -> str:
+        return self.name
+
+
 class MeditationSession(models.Model):
-    MEDITATION_TYPES = [
-        ("mindfulness", "Mindfulness"),
-        ("breathing", "Breathing"),
-        ("body_scan", "Body Scan"),
-        ("loving_kindness", "Loving Kindness"),
-        ("walking", "Walking"),
-        ("other", "Other"),
-    ]
-    meditation_type = models.CharField(max_length=20, choices=MEDITATION_TYPES)
+    meditation_type = models.ForeignKey(
+        MeditationType,
+        on_delete=models.PROTECT,
+        related_name="sessions",
+    )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

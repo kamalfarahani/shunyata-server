@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
-from meditation.models import EmailVerificationToken, MeditationSession
+from meditation.models import EmailVerificationToken, MeditationSession, MeditationType
 
 
 class MeditationSessionModelTest(TestCase):
@@ -14,6 +14,9 @@ class MeditationSessionModelTest(TestCase):
             email="test@example.com",
             password="testpass123"
         )
+        self.mindfulness = MeditationType.objects.get(name="Mindfulness")
+        self.breathing = MeditationType.objects.get(name="Breathing")
+        self.walking = MeditationType.objects.get(name="Walking")
 
     def test_create_meditation_session(self):
         start_time = timezone.now()
@@ -22,7 +25,7 @@ class MeditationSessionModelTest(TestCase):
 
         session = MeditationSession.objects.create(
             user=self.user,
-            meditation_type="mindfulness",
+            meditation_type=self.mindfulness,
             start_time=start_time,
             end_time=end_time,
             duration=duration,
@@ -31,7 +34,7 @@ class MeditationSessionModelTest(TestCase):
         )
 
         self.assertEqual(session.user, self.user)
-        self.assertEqual(session.meditation_type, "mindfulness")
+        self.assertEqual(session.meditation_type, self.mindfulness)
         self.assertEqual(session.duration, duration)
         self.assertTrue(session.completed)
         self.assertEqual(session.notes, "Great session")
@@ -39,40 +42,32 @@ class MeditationSessionModelTest(TestCase):
     def test_meditation_session_str(self):
         session = MeditationSession.objects.create(
             user=self.user,
-            meditation_type="breathing",
+            meditation_type=self.breathing,
             start_time=timezone.now(),
             end_time=timezone.now() + timedelta(minutes=10),
             duration=timedelta(minutes=10),
             completed=True
         )
 
-        self.assertEqual(str(session), "breathing - testuser")
+        self.assertEqual(str(session), "Breathing - testuser")
 
-    def test_meditation_types_choices(self):
-        expected_types = [
-            "mindfulness",
-            "breathing",
-            "body_scan",
-            "loving_kindness",
-            "walking",
-            "other"
-        ]
+    def test_new_meditation_type_can_be_used_without_changing_choices(self):
+        meditation_type = MeditationType.objects.create(name="Visualization")
+        session = MeditationSession.objects.create(
+            user=self.user,
+            meditation_type=meditation_type,
+            start_time=timezone.now(),
+            end_time=timezone.now() + timedelta(minutes=5),
+            duration=timedelta(minutes=5),
+            completed=True,
+        )
 
-        for meditation_type in expected_types:
-            session = MeditationSession.objects.create(
-                user=self.user,
-                meditation_type=meditation_type,
-                start_time=timezone.now(),
-                end_time=timezone.now() + timedelta(minutes=5),
-                duration=timedelta(minutes=5),
-                completed=True
-            )
-            self.assertEqual(session.meditation_type, meditation_type)
+        self.assertEqual(session.meditation_type, meditation_type)
 
     def test_meditation_session_cascade_delete(self):
         session = MeditationSession.objects.create(
             user=self.user,
-            meditation_type="mindfulness",
+            meditation_type=self.mindfulness,
             start_time=timezone.now(),
             end_time=timezone.now() + timedelta(minutes=10),
             duration=timedelta(minutes=10),
@@ -87,7 +82,7 @@ class MeditationSessionModelTest(TestCase):
     def test_meditation_session_blank_notes(self):
         session = MeditationSession.objects.create(
             user=self.user,
-            meditation_type="walking",
+            meditation_type=self.walking,
             start_time=timezone.now(),
             end_time=timezone.now() + timedelta(minutes=15),
             duration=timedelta(minutes=15),
