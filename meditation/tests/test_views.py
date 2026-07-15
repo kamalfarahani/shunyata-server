@@ -96,7 +96,7 @@ class MeditationSessionViewSetTest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(MeditationSession.objects.count(), 1)
-        self.assertEqual(MeditationSession.objects.first().user, self.user)
+        self.assertEqual(MeditationSession.objects.get().user, self.user)
 
     def test_create_session_unauthenticated(self):
         url = reverse("meditation-session-list")
@@ -243,8 +243,8 @@ class UserRegistrationViewTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         user = User.objects.get(username="newuser")
-        self.assertTrue(hasattr(user, "email_verification_token"))
-        self.assertIsNotNone(user.email_verification_token.token)
+        verification_token = EmailVerificationToken.objects.get(user=user)
+        self.assertIsNotNone(verification_token.token)
 
     def test_register_user_invalid_data(self):
         url = reverse("register")

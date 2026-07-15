@@ -74,7 +74,7 @@ class MeditationSessionModelTest(TestCase):
             completed=True
         )
 
-        session_id = session.id
+        session_id = session.pk
         self.user.delete()
 
         self.assertFalse(MeditationSession.objects.filter(id=session_id).exists())
@@ -144,7 +144,7 @@ class EmailVerificationTokenModelTest(TestCase):
 
     def test_token_cascade_delete_with_user(self):
         token = EmailVerificationToken.create_token(self.user)
-        token_id = token.id
+        token_id = token.pk
 
         self.user.delete()
 
@@ -153,4 +153,7 @@ class EmailVerificationTokenModelTest(TestCase):
     def test_one_to_one_relationship(self):
         token = EmailVerificationToken.create_token(self.user)
 
-        self.assertEqual(self.user.email_verification_token, token)
+        self.assertEqual(
+            self.user.email_verification_token,  # pyright: ignore[reportAttributeAccessIssue]
+            token,
+        )

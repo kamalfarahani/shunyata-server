@@ -7,7 +7,7 @@ from meditation.models import MeditationSession, MeditationType
 
 
 class MeditationTypeSerializer(serializers.ModelSerializer):
-    class Meta:
+    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
         model = MeditationType
         fields = ["id", "name"]
 
@@ -25,7 +25,7 @@ class CaseInsensitiveTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class MeditationSessionSerializer(serializers.ModelSerializer):
-    class Meta:
+    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
         model = MeditationSession
         fields = [
             "id",
@@ -49,7 +49,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
     password_confirm = serializers.CharField(write_only=True, required=True)
 
-    class Meta:
+    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
         model = User
         fields = ["username", "email", "password", "password_confirm"]
         extra_kwargs = {
